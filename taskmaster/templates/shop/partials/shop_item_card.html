@@ -1,0 +1,61 @@
+<div class="col-sm-6 col-lg-4">
+    <div class="card border-0 shadow-sm rounded-4 p-3 h-100
+        {% if data.is_equipped %}border-primary{% endif %}"
+         style="{% if data.is_equipped %}border: 2px solid var(--bs-primary) !important;{% endif %}">
+
+        {% if data.item.image %}
+        <img src="{{ data.item.image.url }}" class="rounded-3 mb-3"
+             style="width: 100%; height: 160px; object-fit: cover;">
+        {% else %}
+        <div class="rounded-3 mb-3 d-flex align-items-center justify-content-center bg-light"
+             style="height: 160px;">
+            {% if data.item.item_type == 'avatar' %}
+            <i class="bi bi-person-circle text-muted" style="font-size: 4rem;"></i>
+            {% elif data.item.item_type == 'theme' %}
+            <i class="bi bi-palette text-muted" style="font-size: 4rem;"></i>
+            {% elif data.item.item_type == 'shield' %}
+            <i class="bi bi-shield-fill text-muted" style="font-size: 4rem;"></i>
+            {% else %}
+            <i class="bi bi-gift text-muted" style="font-size: 4rem;"></i>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <div class="fw-bold mb-1">{{ data.item.name }}</div>
+        {% if data.item.description %}
+        <div class="text-muted small mb-2">{{ data.item.description }}</div>
+        {% endif %}
+
+        <div class="mt-auto">
+            {% if data.item.is_default %}
+            <span class="badge bg-success-subtle text-success rounded-pill mb-2">По умолчанию</span>
+            {% endif %}
+
+            {% if data.is_equipped %}
+            <button class="btn btn-primary btn-sm rounded-3 w-100 disabled">
+                <i class="bi bi-check-circle me-1"></i>Надето
+            </button>
+            {% elif data.is_owned %}
+            <button class="btn btn-success btn-sm rounded-3 w-100 btn-equip"
+                    data-item-id="{{ data.item.id }}" data-item-type="{{ data.item.item_type }}">
+                <i class="bi bi-check2 me-1"></i>Надеть
+            </button>
+            {% else %}
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="fw-bold text-warning">
+                    <i class="bi bi-coin me-1"></i>{{ data.item.price }} монет
+                </span>
+                {% if not data.can_afford %}
+                <span class="text-muted small">Недостаточно монет</span>
+                {% endif %}
+            </div>
+            <button class="btn btn-warning btn-sm rounded-3 w-100 btn-buy
+                {% if not data.can_afford %}disabled{% endif %}"
+                    data-item-id="{{ data.item.id }}" data-item-type="{{ data.item.item_type }}"
+                    {% if not data.can_afford %}disabled{% endif %}>
+                <i class="bi bi-coin me-1"></i>Купить
+            </button>
+            {% endif %}
+        </div>
+    </div>
+</div>

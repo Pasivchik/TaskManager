@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+{% block title %}Статистика - TaskMaster{% endblock %}
+{% block extra_css %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+{% endblock %}
+{% block content %}
+<h4 class="fw-bold mb-4">📊 Статистика</h4>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card p-3 text-center">
+            <div style="font-size:1.8rem;color:var(--success);">✅</div>
+            <div class="fw-bold fs-3">{{ completed_tasks }}</div>
+            <div style="color:var(--text-muted);font-size:.85rem;">Выполнено всего</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card p-3 text-center">
+            <div style="font-size:1.8rem;">📈</div>
+            <div class="fw-bold fs-3">{{ completion_rate }}%</div>
+            <div style="color:var(--text-muted);font-size:.85rem;">Процент выполнения</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card p-3 text-center">
+            <div style="font-size:1.8rem;">🔥</div>
+            <div class="fw-bold fs-3" style="color:var(--streak-color);">{{ max_streak }}</div>
+            <div style="color:var(--text-muted);font-size:.85rem;">Лучшая серия</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card p-3 text-center">
+            <div style="font-size:1.8rem;">📅</div>
+            <div class="fw-bold fs-3">{{ avg_per_day }}</div>
+            <div style="color:var(--text-muted);font-size:.85rem;">Среднее в день</div>
+        </div>
+    </div>
+</div>
+
+<div class="card p-4 mb-4">
+    <h6 class="fw-bold mb-3">⭐ Прогресс уровня</h6>
+    <div class="d-flex justify-content-between mb-1">
+        <span style="color:var(--text-secondary);">Уровень {{ level }}</span>
+        <span style="color:var(--text-muted);">{{ xp }} / {{ request.user.xp_for_next_level }} XP</span>
+    </div>
+    <div class="progress mb-3" style="height:16px;">
+        <div class="progress-bar" style="width:{{ request.user.xp_progress_percent }}%"></div>
+    </div>
+    <div class="row g-2 text-center">
+        <div class="col-4">
+            <div class="fw-bold" style="color:var(--accent-light);">{{ level }}</div>
+            <div style="font-size:.8rem;color:var(--text-muted);">Уровень</div>
+        </div>
+        <div class="col-4">
+            <div class="fw-bold" style="color:var(--xp-color);">{{ xp }}</div>
+            <div style="font-size:.8rem;color:var(--text-muted);">Текущий XP</div>
+        </div>
+        <div class="col-4">
+            <div class="fw-bold" style="color:var(--streak-color);">{{ current_streak }}</div>
+            <div style="font-size:.8rem;color:var(--text-muted);">Серия сейчас</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card p-4">
+            <h6 class="fw-bold mb-3">📅 Активность за последние 30 дней</h6>
+            <canvas id="activityChart" height="130"></canvas>
+        </div>
+
+        <div class="card p-4 mt-4">
+            <h6 class="fw-bold mb-3">📋 По типам</h6>
+            {% for type_key, count in type_map.items %}
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span style="color:var(--text-secondary);">
+                    {% if type_key == 'daily' %}📆 Ежедневные
+                    {% elif type_key == 'once' %}1️⃣ Разовые
+                    {% elif type_key == 'recurring' %}🔄 Повторяющиеся
+                    {% elif type_key == 'goal' %}🎯 Долгосрочные
+                    {% endif %}
+                </span>
+                <span class="fw-bold">{{ count }}</span>
+            </div>
+            {% empty %}
+            <div class="text-center py-3" style="color:var(--text-muted);">Нет данных</div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card p-4">
+            <h6 class="fw-bold mb-3">📁 По категориям</h6>
+            {% if cat_data != '[]' and cat_data != '[0]' %}
+            <canvas id="categoryChart" height="200"></canvas>
+            {% else %}
+            <div class="text-center py-3" style="color:var(--text-muted);">Нет данных</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+Chart.defaults.color = '#94a3b8';
+
+new Chart(document.getElementById('activityChart'), {
+    type: 'bar',
+    data: {
+        labels: {{ activity_labels|safe }},
+        datasets: [
+            {
+                label: 'Задач выполнено',
+                data: {{ activity_data|safe }},
+                backgroundColor: 'rgba(124,58,237,0.6)',
+                borderColor: 'rgba(168,85,247,1)',
+                borderWidth: 1,
+                borderRadius: 4,
+                categoryPercentage: 0.9,
+                barPercentage: 0.9,
+            },
+            {
+                label: 'Просрочено',
+                data: {{ overdue_activity_data|safe }},
+                backgroundColor: 'rgba(239,68,68,0.55)',
+                borderColor: 'rgba(239,68,68,1)',
+                borderWidth: 1,
+                borderRadius: 4,
+                categoryPercentage: 0.9,
+                barPercentage: 0.9,
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                display: true,
+                labels: { color: '#94a3b8', boxWidth: 14, padding: 14 }
+            }
+        },
+        scales: {
+            x: { grid: { color: '#2d3748' }, ticks: { maxRotation: 45 } },
+            y: { grid: { color: '#2d3748' }, beginAtZero: true, ticks: { stepSize: 1 } }
+        }
+    }
+});
+
+{% if cat_data != '[]' %}
+const catLabels = {{ cat_labels|safe }};
+const catData = {{ cat_data|safe }};
+const catColors = {{ cat_colors|safe }};
+if (catData.length > 0 && catData.some(v => v > 0)) {
+    new Chart(document.getElementById('categoryChart'), {
+        type: 'doughnut',
+        data: {
+            labels: catLabels,
+            datasets: [{
+                data: catData,
+                backgroundColor: catColors.map(c => c + '99'),
+                borderColor: catColors,
+                borderWidth: 2,
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom', labels: { padding: 10, font: { size: 12 } } }
+            }
+        }
+    });
+}
+{% endif %}
+</script>
+{% endblock %}

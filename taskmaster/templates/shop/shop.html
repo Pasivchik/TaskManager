@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+{% block title %}Магазин - TaskMaster{% endblock %}
+{% block extra_css %}
+<style>
+    .shop-grid > [class*="col-"] {
+        display: flex;
+    }
+    .shop-card {
+        width: 100%;
+        min-height: 100%;
+        display: flex;
+        flex-direction: column;
+        border-width: 1px !important;
+        box-sizing: border-box;
+    }
+    .shop-card.is-owned {
+        border-color: var(--success) !important;
+        box-shadow: inset 0 0 0 1px var(--success);
+    }
+    .shop-card form {
+        margin-top: auto;
+    }
+    .shop-card .btn {
+        min-height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .shop-card-title {
+        min-height: 24px;
+    }
+    .shop-card-desc {
+        min-height: 44px;
+    }
+    .shop-preview {
+        flex: 0 0 auto;
+        margin-bottom: 12px;
+    }
+</style>
+{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold mb-0">🛒 Магазин</h4>
+    <div class="d-flex gap-2 flex-wrap justify-content-end">
+        <span class="stat-badge coins">💰 {{ profile_coins }} монет</span>
+    </div>
+</div>
+
+{% if items_by_type.theme %}
+<h5 class="fw-bold mb-3">🎨 Темы интерфейса</h5>
+<div class="row g-3 mb-5 shop-grid">
+    {% for item in items_by_type.theme %}
+    <div class="col-sm-6 col-md-4 col-lg-3">
+        <div class="card p-3 shop-card {% if item.id in owned_ids %}is-owned{% endif %}">
+            <div class="fw-bold mb-1 shop-card-title">{{ item.name }}</div>
+            <div class="shop-card-desc" style="font-size:.85rem;color:var(--text-muted);margin-bottom:8px;">{{ item.description }}</div>
+            {% if item.css_class %}
+            <div class="shop-preview" style="height:40px;border-radius:8px;
+                {% if item.css_class == 'theme-dark' %}background:linear-gradient(135deg,#0f0f1a,#7c3aed);
+                {% elif item.css_class == 'theme-sunset' %}background:linear-gradient(135deg,#1a0a0a,#e85d04);
+                {% elif item.css_class == 'theme-forest' %}background:linear-gradient(135deg,#0a1a0a,#16a34a);
+                {% elif item.css_class == 'theme-default' %}background:linear-gradient(135deg,#f4f7fb,#2563eb);
+                {% else %}background:linear-gradient(135deg,var(--bg-primary),var(--accent));{% endif %}">
+            </div>
+            {% endif %}
+            {% if item.id in owned_ids %}
+                <form method="post" action="{% url 'shop:apply' item.id %}">
+                    {% csrf_token %}
+                    <button class="btn btn-sm btn-outline-secondary w-100">✅ Применить</button>
+                </form>
+            {% else %}
+                <form method="post" action="{% url 'shop:buy' item.id %}">
+                    {% csrf_token %}
+                    <button class="btn btn-sm btn-accent w-100"
+                            {% if profile_coins < item.price %}disabled title="Недостаточно монет"{% endif %}>
+                        💰 {{ item.price }} - Купить
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if items_by_type.pet_accessory %}
+<h5 class="fw-bold mb-3">🐾 Аксессуары котика</h5>
+<div class="row g-3 mb-5 shop-grid">
+    {% for item in items_by_type.pet_accessory %}
+    <div class="col-sm-6 col-md-4 col-lg-3">
+        <div class="card p-3 text-center shop-card {% if item.id in owned_ids %}is-owned{% endif %}">
+            <div class="pet-widget pet-state-happy {{ profile_pet_color_class }} {{ item.css_class }} shop-preview" style="position:relative;right:auto;bottom:auto;width:116px;margin:0 auto 12px;box-shadow:none;z-index:1;">
+                <div class="pet-stage">
+                    <div class="pet-sprite" aria-hidden="true">
+                        <span class="pet-accessory accessory-wings"></span>
+                        <span class="pet-tail"></span>
+                        <span class="pet-body"></span>
+                        <span class="pet-paw left"></span>
+                        <span class="pet-paw right"></span>
+                        <span class="pet-head">
+                            <span class="pet-eye left"></span>
+                            <span class="pet-eye right"></span>
+                            <span class="pet-nose"></span>
+                            <span class="pet-mouth"></span>
+                        </span>
+                        <span class="pet-accessory accessory-hat"></span>
+                        <span class="pet-accessory accessory-bell"></span>
+                        <span class="pet-accessory accessory-scarf"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="fw-bold mb-1 shop-card-title">{{ item.name }}</div>
+            <div class="shop-card-desc" style="font-size:.85rem;color:var(--text-muted);margin-bottom:12px;">{{ item.description }}</div>
+            {% if item.id in owned_ids %}
+                <form method="post" action="{% url 'shop:apply' item.id %}">
+                    {% csrf_token %}
+                    <button class="btn btn-sm btn-outline-secondary w-100">✅ Надеть</button>
+                </form>
+            {% else %}
+                <form method="post" action="{% url 'shop:buy' item.id %}">
+                    {% csrf_token %}
+                    <button class="btn btn-sm btn-accent w-100"
+                            {% if profile_coins < item.price %}disabled title="Недостаточно монет"{% endif %}>
+                        💰 {{ item.price }} - Купить
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if items_by_type.pet_color %}
+<h5 class="fw-bold mb-3">🎨 Расцветки котика</h5>
+<div class="row g-3 mb-5 shop-grid">
+    {% for item in items_by_type.pet_color %}
+    <div class="col-sm-6 col-md-4 col-lg-3">
+        <div class="card p-3 text-center shop-card {% if item.id in owned_ids %}is-owned{% endif %}">
+            <div class="pet-widget pet-state-happy {{ item.css_class }} {{ profile_pet_accessory_class }} shop-preview" style="position:relative;right:auto;bottom:auto;width:116px;margin:0 auto 12px;box-shadow:none;z-index:1;">
+                <div class="pet-stage">
+                    <div class="pet-sprite" aria-hidden="true">
+                        <span class="pet-accessory accessory-wings"></span>
+                        <span class="pet-tail"></span>
+                        <span class="pet-body"></span>
+                        <span class="pet-paw left"></span>
+                        <span class="pet-paw right"></span>
+                        <span class="pet-head">
+                            <span class="pet-eye left"></span>
+                            <span class="pet-eye right"></span>
+                            <span class="pet-nose"></span>
+                            <span class="pet-mouth"></span>
+                        </span>
+                        <span class="pet-accessory accessory-hat"></span>
+                        <span class="pet-accessory accessory-bell"></span>
+                        <span class="pet-accessory accessory-scarf"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="fw-bold mb-1 shop-card-title">{{ item.name }}</div>
+            <div class="shop-card-desc" style="font-size:.85rem;color:var(--text-muted);margin-bottom:12px;">{{ item.description }}</div>
+            {% if item.id in owned_ids %}
+                <form method="post" action="{% url 'shop:apply' item.id %}">
+                    {% csrf_token %}
+                    <button class="btn btn-sm btn-outline-secondary w-100">✅ Применить</button>
+                </form>
+            {% else %}
+                <form method="post" action="{% url 'shop:buy' item.id %}">
+                    {% csrf_token %}
+                    <button class="btn btn-sm btn-accent w-100"
+                            {% if profile_coins < item.price %}disabled title="Недостаточно монет"{% endif %}>
+                        💰 {{ item.price }} - Купить
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if items_by_type.shield %}
+<h5 class="fw-bold mb-3">🛡️ Щиты серии</h5>
+<div class="row g-3 shop-grid">
+    {% for item in items_by_type.shield %}
+    <div class="col-sm-6 col-md-4 col-lg-3">
+        <div class="card p-4 text-center shop-card">
+            <div class="shop-preview" style="font-size:3rem;margin-bottom:8px;">🛡️</div>
+            <div class="fw-bold mb-1 shop-card-title">{{ item.name }}</div>
+            <div class="shop-card-desc" style="font-size:.85rem;color:var(--text-muted);margin-bottom:12px;">{{ item.description }}</div>
+            <div style="font-size:.85rem;color:var(--text-secondary);margin-bottom:8px;">
+                У тебя: <strong style="color:var(--accent-light);">{{ request.user.streak_shields }}</strong> щит(а)
+            </div>
+            <form method="post" action="{% url 'shop:buy' item.id %}">
+                {% csrf_token %}
+                <button class="btn btn-accent w-100"
+                        {% if profile_coins < item.price %}disabled title="Недостаточно монет"{% endif %}>
+                    💰 {{ item.price }} - Купить
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if not items %}
+<div class="text-center py-5" style="color:var(--text-muted);">
+    <div style="font-size:3rem;">🏗️</div>
+    <p>Магазин пуст. Администратор скоро добавит товары!</p>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}Редактировать задачу — TaskMaster{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-7 col-lg-6">
+        <div class="card p-4">
+            <h4 class="fw-bold mb-4">✏️ Редактировать задачу</h4>
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3"><label class="form-label">Название</label>{{ form.title }}</div>
+                <div class="mb-3"><label class="form-label">Описание</label>{{ form.description }}</div>
+                <div class="row g-2 mb-3">
+                    <div class="col-6"><label class="form-label">Тип</label>{{ form.task_type }}</div>
+                    <div class="col-6"><label class="form-label">Дата</label>{{ form.due_date }}</div>
+                </div>
+                <div class="mb-3" data-repeat-interval-field>
+                    <label class="form-label">Период для повторяющейся задачи, дней</label>
+                    <input type="number"
+                           name="repeat_interval_days"
+                           class="form-control"
+                           min="1"
+                           step="1"
+                           value="{{ task.repeat_interval_days|default:2 }}"
+                           placeholder="Например: 3">
+                </div>
+                <div class="row g-2 mb-3">
+                    <div class="col-6"><label class="form-label">Приоритет</label>{{ form.priority }}</div>
+                    <div class="col-6"><label class="form-label">Сложность</label>{{ form.difficulty }}</div>
+                </div>
+                <div class="mb-4"><label class="form-label">Категория</label>{{ form.category }}</div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-accent flex-grow-1">Сохранить</button>
+                    <a href="{% url 'tasks:list' %}" class="btn btn-outline-secondary">Отмена</a>
+                </div>
+            </form>
+            {% if task.is_repeating_task and not task.repeat_stopped %}
+            <form method="post" action="{% url 'tasks:stop_repeat' task.id %}" class="mt-3">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{% url 'tasks:list' %}">
+                <button class="btn btn-outline-warning w-100"
+                        onclick="return confirm('Остановить повтор этой задачи? Новые копии больше не будут создаваться.')">
+                    <i class="bi bi-slash-circle me-1"></i> Остановить повтор
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

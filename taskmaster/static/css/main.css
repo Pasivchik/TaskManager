@@ -1,0 +1,118 @@
+/* ============================
+   TaskMaster — Main Styles
+   ============================ */
+
+:root {
+    --tm-primary: #0d6efd;
+    --tm-sidebar-width: 0px;
+    --tm-border-radius: 0.75rem;
+}
+
+body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+/* XP Bar под навбаром */
+.xp-bar-container {
+    height: 4px;
+    width: 100%;
+    background: rgba(255,255,255,0.15);
+    position: sticky;
+    top: 56px;
+    z-index: 1020;
+}
+.xp-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ffc107, #fd7e14);
+    transition: width 0.6s ease;
+}
+
+/* Карточки задач */
+.task-card {
+    border: 1.5px solid #e9ecef !important;
+    transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+.task-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transform: translateY(-1px);
+}
+.task-card.completing {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+/* Кнопка выполнения */
+.complete-btn {
+    width: 32px !important;
+    height: 32px !important;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+.complete-btn:hover {
+    background-color: #198754 !important;
+    color: white !important;
+    border-color: #198754 !important;
+    transform: scale(1.1);
+}
+
+/* Level Up анимация */
+@keyframes pulse-star {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+}
+.level-up-animation {
+    animation: pulse-star 0.6s ease-in-out 3;
+}
+
+/* Карточки магазина */
+.shop-item-card {
+    transition: transform 0.2s ease;
+}
+.shop-item-card:hover {
+    transform: translateY(-4px);
+}
+
+/* Навбар */
+.navbar {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+/* Утилиты */
+.rounded-4 { border-radius: 1rem !important; }
+.rounded-5 { border-radius: 1.25rem !important; }
+.min-w-0 { min-width: 0; }
+
+/* Адаптивность */
+@media (max-width: 576px) {
+    .card-body { padding: 1rem; }
+    h2 { font-size: 1.4rem; }
+}
+
+/* Темы */
+.theme-dark {
+    --bs-body-bg: #1a1a2e;
+    --bs-body-color: #e0e0e0;
+    --bs-card-bg: #16213e;
+    --bs-border-color: #2d3561;
+}
+.theme-dark body {
+    background-color: #1a1a2e;
+    color: #e0e0e0;
+}
+.theme-dark .card {
+    background-color: #16213e;
+    border-color: #2d3561;
+}
+.theme-dark .bg-light {
+    background-color: #0f3460 !important;
+}
+.theme-dark .text-muted {
+    color: #a0aec0 !important;
+}
+.theme-dark .task-card {
+    border-color: #2d3561 !important;
+}
+.theme-dark .navbar {
+    background-color: #0f3460 !important;
+}

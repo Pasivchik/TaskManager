@@ -1,0 +1,225 @@
+{% extends 'base.html' %}
+{% block title %}Задачи — TaskMaster{% endblock %}
+{% block content %}
+<div class="row g-4">
+    <!-- Фильтры -->
+    <div class="col-lg-3">
+        <div class="card p-3 mb-3">
+            <h6 class="fw-bold mb-3">Статус</h6>
+            <div class="d-grid gap-1">
+                <a href="?status=active{% if task_type %}&type={{ task_type }}{% endif %}"
+                   class="btn btn-sm {% if status == 'active' %}btn-accent{% else %}btn-outline-secondary{% endif %}">
+                    Активные
+                </a>
+                <a href="?status=completed{% if task_type %}&type={{ task_type }}{% endif %}"
+                   class="btn btn-sm {% if status == 'completed' %}btn-accent{% else %}btn-outline-secondary{% endif %}">
+                    Выполненные
+                </a>
+                <a href="?status=all{% if task_type %}&type={{ task_type }}{% endif %}"
+                   class="btn btn-sm {% if status == 'all' %}btn-accent{% else %}btn-outline-secondary{% endif %}">
+                    Все
+                </a>
+            </div>
+        </div>
+        <div class="card p-3 mb-3">
+            <h6 class="fw-bold mb-3">Тип</h6>
+            <div class="d-grid gap-1">
+                {% for val, label in form.fields.task_type.choices %}
+                <a href="?status={{ status }}&type={{ val }}"
+                   class="btn btn-sm {% if task_type == val %}btn-accent{% else %}btn-outline-secondary{% endif %}">
+                    {{ label }}
+                </a>
+                {% endfor %}
+                <a href="?status={{ status }}" class="btn btn-sm btn-outline-secondary">Все типы</a>
+            </div>
+        </div>
+        <div class="card p-3">
+            <h6 class="fw-bold mb-2">Категории</h6>
+            {% for cat in categories %}
+            <div class="mb-1">
+                <div class="d-flex align-items-center justify-content-between">
+                    <a href="?status={{ status }}&category={{ cat.id }}"
+                       style="color:{{ cat.color }};text-decoration:none;font-size:.9rem;">
+                        {{ cat.icon }} {{ cat.name }}
+                    </a>
+                    <div class="d-flex align-items-center gap-1">
+                        <button class="btn btn-sm p-0 px-1" type="button"
+                                data-bs-toggle="collapse" data-bs-target="#editCat{{ cat.id }}"
+                                style="color:var(--text-muted);" title="Редактировать">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <form method="post" action="{% url 'tasks:category_delete' cat.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button class="btn btn-sm p-0 px-1" style="color:var(--text-muted);" title="Удалить">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                <div class="collapse mt-2" id="editCat{{ cat.id }}">
+                    <form method="post" action="{% url 'tasks:category_update' cat.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <input type="text" name="name" class="form-control form-control-sm mb-1" value="{{ cat.name }}" placeholder="Название" required>
+                        <div class="d-flex gap-1 mb-1">
+                            <input type="color" name="color" class="form-control form-control-sm form-control-color" value="{{ cat.color }}">
+                            <button type="submit" class="btn btn-accent btn-sm flex-grow-1">Сохранить</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+            <button class="btn btn-sm btn-outline-secondary w-100 mt-2" data-bs-toggle="collapse" data-bs-target="#newCatForm">
+                + Категория
+            </button>
+            <div class="collapse mt-2" id="newCatForm">
+                <form method="post" action="{% url 'tasks:category_create' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <input type="text" name="name" class="form-control form-control-sm mb-1" placeholder="Название">
+                    <div class="d-flex gap-1 mb-1">
+                        <input type="color" name="color" class="form-control form-control-sm form-control-color" value="#7c3aed">
+                    </div>
+                    <button type="submit" class="btn btn-accent btn-sm w-100">Создать</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Список задач -->
+    <div class="col-lg-9">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="fw-bold mb-0">📋 Задачи</h4>
+            <button class="btn btn-accent" data-bs-toggle="modal" data-bs-target="#addTaskModal">
+                <i class="bi bi-plus-lg"></i> Новая задача
+            </button>
+        </div>
+
+        {% if tasks %}
+            {% for task in tasks %}
+            <div class="task-item {% if task.is_completed %}completed{% elif task.is_overdue %}overdue{% endif %}">
+                {% if not task.is_completed %}
+                <div class="task-checkbox" data-task-id="{{ task.id }}" title="Выполнить"></div>
+                {% else %}
+                <div style="width:22px;flex-shrink:0;color:var(--success);"><i class="bi bi-check-circle-fill"></i></div>
+                {% endif %}
+                <div class="priority-dot priority-{{ task.priority }}"></div>
+                <div class="flex-grow-1">
+                    <div class="task-title fw-semibold">{{ task.title }}</div>
+                    {% if task.description %}
+                    <div style="font-size:.85rem;color:var(--text-muted);">{{ task.description|truncatechars:60 }}</div>
+                    {% endif %}
+                    <div class="d-flex gap-1 mt-1 flex-wrap">
+                        <span class="badge" style="background:rgba(100,116,139,.2);color:var(--text-secondary);font-size:.75rem;">
+                            {{ task.get_task_type_display }}
+                        </span>
+                        {% if task.is_repeating_task %}
+                        <span class="badge" style="background:rgba(124,58,237,.14);color:var(--accent-light);font-size:.75rem;">
+                            <i class="bi bi-arrow-repeat"></i> {{ task.repeat_label }}
+                        </span>
+                        {% if task.repeat_stopped %}
+                        <span class="badge" style="background:rgba(100,116,139,.14);color:var(--text-muted);font-size:.75rem;">
+                            Остановлена
+                        </span>
+                        {% endif %}
+                        {% endif %}
+                        <span class="badge badge-difficulty-{{ task.difficulty }}" style="font-size:.75rem;">
+                            {{ task.difficulty_label }}
+                        </span>
+                        {% if task.category %}
+                        <span class="badge" style="background:{{ task.category.color }}20;color:{{ task.category.color }};font-size:.75rem;">
+                            {{ task.category.icon }} {{ task.category.name }}
+                        </span>
+                        {% endif %}
+                        {% if task.due_date %}
+                        <span class="badge" style="background:rgba(100,116,139,.15);color:var(--text-muted);font-size:.75rem;">
+                            📅 {{ task.due_date|date:"d.m.Y" }}
+                        </span>
+                        {% endif %}
+                        {% if task.is_overdue %}
+                        <span class="badge" style="background:rgba(239,68,68,.2);color:var(--danger);font-size:.75rem;">⚠️ Просрочена</span>
+                        <span class="badge" style="background:rgba(245,158,11,.16);color:var(--warning);font-size:.75rem;">награда 50%</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="text-end" style="font-size:.8rem;color:var(--text-muted);flex-shrink:0;">
+                    <div style="color:var(--xp-color);">+{{ task.get_xp_reward }} XP</div>
+                    <div style="color:var(--coin-color);">+{{ task.get_coin_reward }} 💰</div>
+                </div>
+                <div class="d-flex gap-1">
+                    {% if task.is_repeating_task and not task.repeat_stopped %}
+                    <form method="post" action="{% url 'tasks:stop_repeat' task.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <button class="btn btn-outline-warning btn-sm text-nowrap" title="Остановить повтор"
+                                onclick="return confirm('Остановить повтор этой задачи? Новые копии больше не будут создаваться.')">
+                            <i class="bi bi-slash-circle me-1"></i> Остановить
+                        </button>
+                    </form>
+                    {% endif %}
+                    <a href="{% url 'tasks:edit' task.id %}" class="btn btn-sm" style="color:var(--text-muted);" title="Редактировать">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    <form method="post" action="{% url 'tasks:delete' task.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <button class="btn btn-sm" style="color:var(--danger);" title="Удалить"
+                                onclick="return confirm('Удалить задачу?')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+        <div class="card p-5 text-center" style="color:var(--text-muted);">
+            <div style="font-size:3rem;">📭</div>
+            <p class="mt-2">Задач не найдено.<br>Создай первую или измени фильтры!</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Модалка добавления -->
+<div class="modal fade" id="addTaskModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">📝 Новая задача</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'tasks:create' %}">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <div class="modal-body">
+                    <div class="mb-3"><label class="form-label">Название *</label>{{ form.title }}</div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6"><label class="form-label">Тип</label>{{ form.task_type }}</div>
+                        <div class="col-6"><label class="form-label">Дата</label>{{ form.due_date }}</div>
+                    </div>
+                    <div class="mb-3" data-repeat-interval-field>
+                        <label class="form-label">Период для повторяющейся задачи, дней</label>
+                        <input type="number"
+                               name="repeat_interval_days"
+                               class="form-control"
+                               min="1"
+                               step="1"
+                               value="2"
+                               placeholder="Например: 3">
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6"><label class="form-label">Приоритет</label>{{ form.priority }}</div>
+                        <div class="col-6"><label class="form-label">Сложность</label>{{ form.difficulty }}</div>
+                    </div>
+                    <div class="mb-3"><label class="form-label">Категория</label>{{ form.category }}</div>
+                    <div class="mb-1"><label class="form-label">Описание</label>{{ form.description }}</div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-accent">Создать</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

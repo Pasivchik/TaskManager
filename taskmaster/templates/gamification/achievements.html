@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% load gamification_tags %}
+{% block title %}Достижения - TaskMaster{% endblock %}
+{% block extra_css %}
+<style>
+    .achievement-picture {
+        width: 88px;
+        height: 88px;
+        margin: 0 auto 14px;
+        border-radius: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(255,255,255,.14);
+        box-shadow: 0 14px 34px rgba(0,0,0,.22);
+        background: linear-gradient(135deg,#2563eb,#7c3aed);
+    }
+    .achievement-picture:before {
+        content: "";
+        position: absolute;
+        inset: 10px;
+        border-radius: 18px;
+        border: 1px solid rgba(255,255,255,.22);
+    }
+    .achievement-picture i {
+        position: relative;
+        z-index: 1;
+        font-size: 2.6rem;
+        color: #fff;
+        text-shadow: 0 2px 12px rgba(0,0,0,.28);
+    }
+    .achievement-picture.tasks_completed { background: linear-gradient(135deg,#2563eb,#7c3aed); }
+    .achievement-picture.tasks_total { background: linear-gradient(135deg,#2563eb,#7c3aed); }
+    .achievement-picture.streak_days { background: linear-gradient(135deg,#f97316,#ef4444); }
+    .achievement-picture.level_reached { background: linear-gradient(135deg,#fbbf24,#a855f7); }
+    .achievement-picture.coins_earned { background: linear-gradient(135deg,#f59e0b,#10b981); }
+    .achievement-card.locked .achievement-picture {
+        filter: grayscale(1);
+        opacity: .55;
+        box-shadow: none;
+    }
+</style>
+{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold mb-0">🏆 Достижения</h4>
+    <span class="stat-badge level">{{ unlocked_count }} / {{ total_count }}</span>
+</div>
+
+<div class="row g-3">
+    {% for achievement in all_achievements %}
+    <div class="col-sm-6 col-md-4 col-lg-3">
+        <div class="card achievement-card {% if achievement.id not in unlocked_ids %}locked{% endif %}">
+            <div class="achievement-picture {{ achievement.condition_type }}">
+                <i class="bi {{ achievement.icon }}"></i>
+            </div>
+            <div class="fw-bold mb-1">{{ achievement.title }}</div>
+            <div style="font-size:.82rem;color:var(--text-secondary);margin-bottom:8px;">{{ achievement.description }}</div>
+            {% if achievement.id in unlocked_ids %}
+            <div style="font-size:.75rem;color:var(--success);">
+                ✅ Получено {{ unlocked_map|get_item:achievement.id }}<br>
+            </div>
+            {% endif %}
+            {% if achievement.xp_reward or achievement.coin_reward %}
+            <div class="d-flex justify-content-center gap-2 mt-2" style="font-size:.8rem;">
+                {% if achievement.xp_reward %}<span style="color:var(--xp-color);">+{{ achievement.xp_reward }} XP</span>{% endif %}
+                {% if achievement.coin_reward %}<span style="color:var(--coin-color);">+{{ achievement.coin_reward }} 💰</span>{% endif %}
+            </div>
+            {% endif %}
+            <div style="font-size:.75rem;color:var(--text-muted);margin-top:6px;">
+                {{ achievement.get_condition_type_display }}: {{ achievement.condition_value }}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+{% block title %}Профиль — TaskMaster{% endblock %}
+{% block extra_css %}
+<style>
+    .profile-achievement-picture {
+        width: 56px;
+        height: 56px;
+        margin: 0 auto 10px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg,var(--accent),var(--accent-light));
+        box-shadow: 0 10px 24px var(--accent-glow);
+    }
+    .profile-achievement-picture i {
+        color: #fff;
+        font-size: 1.75rem;
+        text-shadow: 0 2px 10px rgba(0,0,0,.25);
+    }
+</style>
+{% endblock %}
+{% block content %}
+<div class="row g-4">
+    <!-- Профиль -->
+    <div class="col-lg-4">
+        <div class="card p-4 text-center">
+            <div class="pet-avatar large {{ profile_pet_color_class }}" aria-hidden="true">
+                <span class="pet-avatar-head">
+                    <span class="pet-avatar-eye left"></span>
+                    <span class="pet-avatar-eye right"></span>
+                    <span class="pet-avatar-nose"></span>
+                </span>
+            </div>
+            <h3 class="fw-bold mb-1">{{ request.user.username }}</h3>
+            <p style="color:var(--text-secondary);">{{ request.user.email }}</p>
+            <div class="d-flex justify-content-center gap-2 flex-wrap mb-3">
+                <span class="stat-badge level">⭐ Уровень {{ request.user.level }}</span>
+                <span class="stat-badge streak">🔥 Серия {{ request.user.streak }}</span>
+            </div>
+            <!-- XP прогресс -->
+            <div class="mb-3">
+                <div class="d-flex justify-content-between mb-1" style="font-size:.85rem;color:var(--text-secondary);">
+                    <span>Опыт</span>
+                    <span>{{ request.user.xp }} / {{ request.user.xp_for_next_level }} XP</span>
+                </div>
+                <div class="progress" style="height:10px;">
+                    <div class="progress-bar" style="width:{{ request.user.xp_progress_percent }}%"></div>
+                </div>
+            </div>
+            <div class="d-flex justify-content-around">
+                <div>
+                    <div class="fw-bold" style="color:var(--coin-color);">{{ request.user.coins }}</div>
+                    <div style="font-size:.8rem;color:var(--text-muted);">монет</div>
+                </div>
+                <div>
+                    <div class="fw-bold">{{ tasks_completed }}</div>
+                    <div style="font-size:.8rem;color:var(--text-muted);">задач</div>
+                </div>
+                <div>
+                    <div class="fw-bold" style="color:var(--streak-color);">{{ request.user.max_streak }}</div>
+                    <div style="font-size:.8rem;color:var(--text-muted);">лучшая серия</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-3 p-3 text-center">
+            <h6 class="fw-bold mb-3">🐾 Мой котик</h6>
+            <div class="pet-widget pet-state-{{ profile_pet_state }} {{ profile_pet_color_class }} {{ profile_pet_accessory_class }}" style="position:relative;right:auto;bottom:auto;margin:0 auto 12px;box-shadow:none;z-index:1;">
+                <div class="pet-stage">
+                    <div class="pet-sprite" aria-hidden="true">
+                        <span class="pet-accessory accessory-wings"></span>
+                        <span class="pet-tail"></span>
+                        <span class="pet-body"></span>
+                        <span class="pet-paw left"></span>
+                        <span class="pet-paw right"></span>
+                        <span class="pet-head">
+                            <span class="pet-eye left"></span>
+                            <span class="pet-eye right"></span>
+                            <span class="pet-nose"></span>
+                            <span class="pet-mouth"></span>
+                        </span>
+                        <span class="pet-accessory accessory-hat"></span>
+                        <span class="pet-accessory accessory-bell"></span>
+                        <span class="pet-accessory accessory-scarf"></span>
+                    </div>
+                </div>
+            </div>
+            <div style="font-size:.9rem;color:var(--text-secondary);">
+                {% if profile_pet_state == 'happy' %}Серия {{ request.user.streak }} дней: котик счастлив и сияет.
+                {% elif profile_pet_state == 'neutral' %}Серия {{ request.user.streak }} дня: котик бодр и рядом.
+                {% elif profile_pet_state == 'sad' %}Котик грустит после сброса серии, но завтра снова будет легче.
+                {% else %}Серия {{ request.user.streak }}: котик пока спит и ждет новых задач.
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Инвентарь -->
+        <div class="card mt-3 p-3">
+            <h6 class="fw-bold mb-3">🎨 Мой инвентарь</h6>
+
+            {% if default_items %}
+            <div style="font-size:.75rem;color:var(--text-muted);margin-bottom:6px;">Базовые предметы</div>
+            {% for item in default_items %}
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <div>
+                    <span>{{ item.name }}</span>
+                    <span style="font-size:.75rem;color:var(--text-muted);margin-left:6px;">бесплатно</span>
+                </div>
+                <form method="post" action="{% url 'shop:apply' item.id %}">
+                    {% csrf_token %}
+                    <button class="btn btn-sm {% if request.user.theme.id == item.id or request.user.pet_accessory.id == item.id or request.user.pet_color.id == item.id %}btn-success{% else %}btn-accent{% endif %}">
+                        {% if request.user.theme.id == item.id or request.user.pet_accessory.id == item.id or request.user.pet_color.id == item.id %}✓ Активно{% else %}Применить{% endif %}
+                    </button>
+                </form>
+            </div>
+            {% endfor %}
+            {% endif %}
+
+            {% if inventory_items %}
+            {% if default_items %}<hr style="border-color:var(--border);margin:8px 0;">{% endif %}
+            <div style="font-size:.75rem;color:var(--text-muted);margin-bottom:6px;">Купленные предметы</div>
+            {% for inv in inventory_items %}
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <span>{{ inv.item.name }}</span>
+                <form method="post" action="{% url 'shop:apply' inv.item.id %}">
+                    {% csrf_token %}
+                    <button class="btn btn-sm {% if request.user.theme.id == inv.item.id or request.user.pet_accessory.id == inv.item.id or request.user.pet_color.id == inv.item.id %}btn-success{% else %}btn-accent{% endif %}">
+                        {% if request.user.theme.id == inv.item.id or request.user.pet_accessory.id == inv.item.id or request.user.pet_color.id == inv.item.id %}✓ Активно{% else %}Применить{% endif %}
+                    </button>
+                </form>
+            </div>
+            {% endfor %}
+            {% endif %}
+
+            {% if not default_items and not inventory_items %}
+            <p style="color:var(--text-muted);font-size:.9rem;">Инвентарь пуст. Загляни в <a href="{% url 'shop:shop' %}" style="color:var(--accent-light);">магазин</a>!</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Достижения -->
+    <div class="col-lg-8">
+        <div class="card p-4">
+            <h5 class="fw-bold mb-4">🏆 Достижения ({{ achievements|length }})</h5>
+            {% if achievements %}
+            <div class="row g-3">
+                {% for ua in achievements %}
+                <div class="col-sm-6 col-md-4">
+                    <div class="card achievement-card">
+                        <div class="profile-achievement-picture">
+                            <i class="bi {{ ua.achievement.icon }}"></i>
+                        </div>
+                        <div class="fw-bold">{{ ua.achievement.title }}</div>
+                        <div style="font-size:.8rem;color:var(--text-muted);">{{ ua.achievement.description }}</div>
+                        <div style="font-size:.75rem;color:var(--text-muted);margin-top:6px;">
+                            {{ ua.date_unlocked|date:"d.m.Y" }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5" style="color:var(--text-muted);">
+                <div style="font-size:3rem;">🔒</div>
+                <p>Выполняй задачи и открывай достижения!</p>
+                <a href="{% url 'gamification:achievements' %}" class="btn btn-accent btn-sm">Смотреть все</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

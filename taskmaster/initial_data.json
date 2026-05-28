@@ -1,0 +1,329 @@
+[
+  {
+    "model": "gamification.achievement",
+    "pk": 1,
+    "fields": {
+      "title": "Первый шаг",
+      "description": "Выполни свою первую задачу",
+      "icon": "bi-star",
+      "condition_type": "tasks_completed",
+      "condition_value": 1,
+      "xp_reward": 50,
+      "coin_reward": 10
+    }
+  },
+  {
+    "model": "gamification.achievement",
+    "pk": 2,
+    "fields": {
+      "title": "На разгоне",
+      "description": "Выполни 10 задач",
+      "icon": "bi-lightning-charge",
+      "condition_type": "tasks_completed",
+      "condition_value": 10,
+      "xp_reward": 100,
+      "coin_reward": 25
+    }
+  },
+  {
+    "model": "gamification.achievement",
+    "pk": 3,
+    "fields": {
+      "title": "Продуктивный",
+      "description": "Выполни 50 задач",
+      "icon": "bi-trophy",
+      "condition_type": "tasks_completed",
+      "condition_value": 50,
+      "xp_reward": 300,
+      "coin_reward": 75
+    }
+  },
+  {
+    "model": "gamification.achievement",
+    "pk": 4,
+    "fields": {
+      "title": "Машина",
+      "description": "Выполни 100 задач",
+      "icon": "bi-robot",
+      "condition_type": "tasks_completed",
+      "condition_value": 100,
+      "xp_reward": 500,
+      "coin_reward": 150
+    }
+  },
+  {
+    "model": "gamification.achievement",
+    "pk": 5,
+    "fields": {
+      "title": "3 дня подряд",
+      "description": "Выполняй задачи 3 дня подряд",
+      "icon": "bi-fire",
+      "condition_type": "streak_days",
+      "condition_value": 3,
+      "xp_reward": 75,
+      "coin_reward": 20
+    }
+  },
+  {
+    "model": "gamification.achievement",
+    "pk": 6,
+    "fields": {
+      "title": "Неделя без пропусков",
+      "description": "Серия 7 дней",
+      "icon": "bi-calendar-check",
+      "condition_type": "streak_days",
+      "condition_value": 7,
+      "xp_reward": 200,
+      "coin_reward": 50
+    }
+  },
+  {
+    "model": "gamification.achievement",
+    "pk": 7,
+    "fields": {
+      "title": "Месяц дисциплины",
+      "description": "Серия 30 дней",
+      "icon": "bi-award",
+      "condition_type": "streak_days",
+      "condition_value": 30,
+      "xp_reward": 1000,
+      "coin_reward": 250
+    }
+  },
+  {
+    "model": "gamification.achievement",
+    "pk": 8,
+    "fields": {
+      "title": "Уровень 5",
+      "description": "Достигни 5 уровня",
+      "icon": "bi-star-fill",
+      "condition_type": "level_reached",
+      "condition_value": 5,
+      "xp_reward": 0,
+      "coin_reward": 100
+    }
+  },
+  {
+    "model": "gamification.achievement",
+    "pk": 9,
+    "fields": {
+      "title": "Уровень 10",
+      "description": "Достигни 10 уровня",
+      "icon": "bi-stars",
+      "condition_type": "level_reached",
+      "condition_value": 10,
+      "xp_reward": 0,
+      "coin_reward": 300
+    }
+  },
+  {
+    "model": "shop.shopitem",
+    "pk": 3,
+    "fields": {
+      "name": "Светлая тема",
+      "description": "Светлая тема для дневной работы",
+      "item_type": "theme",
+      "price": 120,
+      "image": "",
+      "css_class": "theme-default",
+      "is_default": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "shop.shopitem",
+    "pk": 4,
+    "fields": {
+      "name": "Тёмная тема",
+      "description": "Базовая тёмная тема TaskMaster",
+      "item_type": "theme",
+      "price": 0,
+      "image": "",
+      "css_class": "theme-dark",
+      "is_default": true,
+      "is_active": true
+    }
+  },
+  {
+    "model": "shop.shopitem",
+    "pk": 16,
+    "fields": {
+      "name": "Закатная тема",
+      "description": "Тёплая красно-оранжевая тема для вечернего планирования",
+      "item_type": "theme",
+      "price": 220,
+      "image": "",
+      "css_class": "theme-sunset",
+      "is_default": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "shop.shopitem",
+    "pk": 17,
+    "fields": {
+      "name": "Лесная тема",
+      "description": "Зелёная спокойная тема для фокуса",
+      "item_type": "theme",
+      "price": 260,
+      "image": "",
+      "css_class": "theme-forest",
+      "is_default": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "shop.shopitem",
+    "pk": 5,
+    "fields": {
+      "name": "Щит серии",
+      "description": "Защищает твою серию от сброса при пропуске одного дня",
+      "item_type": "shield",
+      "price": 100,
+      "image": "",
+      "css_class": "",
+      "is_default": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "shop.shopitem",
+    "pk": 6,
+    "fields": {
+      "name": "Свободный вечер",
+      "description": "Разреши себе посмотреть серию или поиграть в игры без чувства вины",
+      "item_type": "reward",
+      "price": 50,
+      "image": "",
+      "css_class": "",
+      "is_default": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "shop.shopitem",
+    "pk": 7,
+    "fields": {
+      "name": "Фиолетовая шапка",
+      "description": "Маленькая шапка для котика, который уже почти начальник задач.",
+      "item_type": "pet_accessory",
+      "price": 35,
+      "image": "",
+      "css_class": "pet-hat",
+      "is_default": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "shop.shopitem",
+    "pk": 8,
+    "fields": {
+      "name": "Золотой колокольчик",
+      "description": "Аккуратный ошейник с колокольчиком для боевого настроя.",
+      "item_type": "pet_accessory",
+      "price": 75,
+      "image": "",
+      "css_class": "pet-bell",
+      "is_default": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "shop.shopitem",
+    "pk": 9,
+    "fields": {
+      "name": "Красный шарфик",
+      "description": "Для серий, которые хочется носить красиво.",
+      "item_type": "pet_accessory",
+      "price": 90,
+      "image": "",
+      "css_class": "pet-scarf",
+      "is_default": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "shop.shopitem",
+    "pk": 10,
+    "fields": {
+      "name": "Небесные крылья",
+      "description": "Когда серия уже летит сама, но котик помогает.",
+      "item_type": "pet_accessory",
+      "price": 140,
+      "image": "",
+      "css_class": "pet-wings",
+      "is_default": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "shop.shopitem",
+    "pk": 11,
+    "fields": {
+      "name": "Кремовый окрас",
+      "description": "Мягкая светлая расцветка для спокойных продуктивных дней.",
+      "item_type": "pet_color",
+      "price": 500,
+      "image": "",
+      "css_class": "pet-color-cream",
+      "is_default": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "shop.shopitem",
+    "pk": 12,
+    "fields": {
+      "name": "Полночный окрас",
+      "description": "Темный редкий котик для тех, кто накопил серьезный запас монет.",
+      "item_type": "pet_color",
+      "price": 850,
+      "image": "",
+      "css_class": "pet-color-midnight",
+      "is_default": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "shop.shopitem",
+    "pk": 13,
+    "fields": {
+      "name": "Снежный окрас",
+      "description": "Чистый бело-голубой окрас как награда за устойчивую дисциплину.",
+      "item_type": "pet_color",
+      "price": 1200,
+      "image": "",
+      "css_class": "pet-color-snow",
+      "is_default": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "shop.shopitem",
+    "pk": 14,
+    "fields": {
+      "name": "Тигровый окрас",
+      "description": "Полосатый окрас для серии, которую уже видно издалека.",
+      "item_type": "pet_color",
+      "price": 1600,
+      "image": "",
+      "css_class": "pet-color-tiger",
+      "is_default": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "shop.shopitem",
+    "pk": 15,
+    "fields": {
+      "name": "Лунный окрас",
+      "description": "Самая дорогая магическая расцветка для настоящего коллекционера.",
+      "item_type": "pet_color",
+      "price": 2200,
+      "image": "",
+      "css_class": "pet-color-moon",
+      "is_default": false,
+      "is_active": true
+    }
+  }
+]

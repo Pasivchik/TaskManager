@@ -1,0 +1,300 @@
+{% extends 'base.html' %}
+{% block title %}Главная — TaskMaster{% endblock %}
+{% block content %}
+
+<!-- Верхняя строка со статистикой -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card p-3 text-center">
+            <div style="font-size:1.8rem;color:var(--accent-light);">⭐</div>
+            <div class="fw-bold fs-4" data-stat="level">{{ profile_level }}</div>
+            <div style="color:var(--text-muted);font-size:.85rem;">Уровень</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card p-3 text-center">
+            <div style="font-size:1.8rem;">🔥</div>
+            <div class="fw-bold fs-4" style="color:var(--streak-color);" data-stat="streak">{{ profile_streak }}</div>
+            <div style="color:var(--text-muted);font-size:.85rem;">Дней подряд</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card p-3 text-center">
+            <div style="font-size:1.8rem;">💰</div>
+            <div class="fw-bold fs-4" style="color:var(--coin-color);" data-stat="coins">{{ profile_coins }}</div>
+            <div style="color:var(--text-muted);font-size:.85rem;">Монет</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card p-3 text-center">
+            <div style="font-size:1.8rem;">✅</div>
+            <div class="fw-bold fs-4" style="color:var(--success);" data-stat="completed-today">{{ completed_today }}</div>
+            <div style="color:var(--text-muted);font-size:.85rem;">Выполнено сегодня</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Левая колонка: задачи на сегодня -->
+    <div class="col-lg-8">
+        <!-- Прогресс дня -->
+        <div class="card p-4 mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="mb-0 fw-bold">📅 Прогресс дня</h6>
+                <span style="color:var(--text-secondary);font-size:.9rem;" data-stat="day-progress">{{ completed_today }} / {{ total_today }}</span>
+            </div>
+            <div class="progress" style="height:12px;">
+                <div class="progress-bar" data-stat="day-bar" style="width:{{ progress_percent }}%"></div>
+            </div>
+            {% if progress_percent == 100 and total_today > 0 %}
+            <div class="text-center mt-2" style="color:var(--success);font-size:.9rem;">🎉 Все задачи на сегодня выполнены!</div>
+            {% endif %}
+        </div>
+
+        <!-- Задачи на сегодня -->
+        <div class="card p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0 fw-bold">📋 Задачи</h5>
+                <button class="btn btn-accent btn-sm" data-bs-toggle="modal" data-bs-target="#addTaskModal">
+                    <i class="bi bi-plus-lg"></i> Добавить
+                </button>
+            </div>
+
+            <ul class="nav nav-tabs task-tabs mb-3">
+                <li class="nav-item">
+                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#todayTasksPane" type="button">
+                        Сегодня
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#overdueTasksPane" type="button">
+                        Просроченные
+                        {% if overdue_tasks %}
+                        <span class="badge ms-1" style="background:rgba(239,68,68,.18);color:var(--danger);">{{ overdue_tasks|length }}</span>
+                        {% endif %}
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="todayTasksPane">
+            {% if today_tasks %}
+                {% for task in today_tasks %}
+                <div class="task-item {% if task.is_overdue %}overdue{% endif %}">
+                    <div class="task-checkbox" data-task-id="{{ task.id }}" title="Отметить выполненной"></div>
+                    <div class="priority-dot priority-{{ task.priority }}"></div>
+                    <div class="flex-grow-1">
+                        <div class="task-title fw-semibold">{{ task.title }}</div>
+                        <div class="d-flex gap-2 mt-1 flex-wrap">
+                            <span class="badge badge-difficulty-{{ task.difficulty }}" style="font-size:.75rem;">
+                                {{ task.difficulty_label }}
+                            </span>
+                            {% if task.is_repeating_task %}
+                            <span class="badge" style="background:rgba(124,58,237,.14);color:var(--accent-light);font-size:.75rem;">
+                                <i class="bi bi-arrow-repeat"></i> {{ task.repeat_label }}
+                            </span>
+                            {% endif %}
+                            {% if task.category %}
+                            <span class="badge" style="background:{{ task.category.color }}20;color:{{ task.category.color }};font-size:.75rem;">
+                                {{ task.category.icon }} {{ task.category.name }}
+                            </span>
+                            {% endif %}
+                            {% if task.is_overdue %}
+                            <span class="badge" style="background:rgba(239,68,68,.2);color:var(--danger);font-size:.75rem;">⚠️ Просрочена</span>
+                            <span class="badge" style="background:rgba(245,158,11,.16);color:var(--warning);font-size:.75rem;">награда 50%</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="text-end" style="font-size:.8rem;color:var(--text-muted);flex-shrink:0;">
+                        +{{ task.get_xp_reward }} XP<br>+{{ task.get_coin_reward }} 💰
+                    </div>
+                    {% if task.is_repeating_task and not task.repeat_stopped %}
+                    <form method="post" action="{% url 'tasks:stop_repeat' task.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="/">
+                        <button class="btn btn-outline-warning btn-sm text-nowrap" title="Остановить повтор"
+                                onclick="return confirm('Остановить повтор этой задачи? Новые копии больше не будут создаваться.')">
+                            <i class="bi bi-slash-circle me-1"></i> Остановить
+                        </button>
+                    </form>
+                    {% endif %}
+                    <a href="{% url 'tasks:edit' task.id %}" class="btn btn-sm" style="color:var(--text-muted);" title="Редактировать">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                </div>
+                {% endfor %}
+            {% else %}
+            <div class="text-center py-4" style="color:var(--text-muted);">
+                <div style="font-size:2.5rem;">🎯</div>
+                <p>Задач на сегодня нет. Добавь первую!</p>
+            </div>
+            {% endif %}
+                </div>
+
+                <div class="tab-pane fade" id="overdueTasksPane">
+            {% if overdue_tasks %}
+                {% for task in overdue_tasks %}
+                <div class="task-item overdue">
+                    <div class="task-checkbox" data-task-id="{{ task.id }}" title="Отметить выполненной"></div>
+                    <div class="priority-dot priority-{{ task.priority }}"></div>
+                    <div class="flex-grow-1">
+                        <div class="task-title fw-semibold">{{ task.title }}</div>
+                        <div class="d-flex gap-2 mt-1 flex-wrap">
+                            <span class="badge badge-difficulty-{{ task.difficulty }}" style="font-size:.75rem;">
+                                {{ task.difficulty_label }}
+                            </span>
+                            <span class="badge" style="background:rgba(239,68,68,.2);color:var(--danger);font-size:.75rem;">
+                                ⚠️ Просрочена с {{ task.due_date|date:"d.m.Y" }}
+                            </span>
+                            <span class="badge" style="background:rgba(245,158,11,.16);color:var(--warning);font-size:.75rem;">награда 50%</span>
+                            {% if task.category %}
+                            <span class="badge" style="background:{{ task.category.color }}20;color:{{ task.category.color }};font-size:.75rem;">
+                                {{ task.category.icon }} {{ task.category.name }}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="text-end" style="font-size:.8rem;color:var(--text-muted);flex-shrink:0;">
+                        +{{ task.get_xp_reward }} XP<br>+{{ task.get_coin_reward }} 💰
+                    </div>
+                    <a href="{% url 'tasks:edit' task.id %}" class="btn btn-sm" style="color:var(--text-muted);" title="Редактировать">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                </div>
+                {% endfor %}
+            {% else %}
+            <div class="text-center py-4" style="color:var(--text-muted);">
+                <div style="font-size:2.5rem;">✅</div>
+                <p>Просроченных задач нет.</p>
+            </div>
+            {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Правая колонка -->
+    <div class="col-lg-4">
+        <!-- XP прогресс -->
+        <div class="card p-4 mb-3">
+            <h6 class="fw-bold mb-3">⭐ Прогресс уровня</h6>
+            <div class="d-flex justify-content-between mb-1" style="font-size:.85rem;color:var(--text-secondary);">
+                <span data-stat="xp-level-label">Уровень {{ profile_level }}</span>
+                <span data-stat="xp-counter">{{ profile_xp }} / {{ profile_xp_needed }} XP</span>
+            </div>
+            <div class="progress mb-2" style="height:14px;">
+                <div class="progress-bar" data-stat="xp-bar" style="width:{{ profile_xp_percent }}%"></div>
+            </div>
+            <div style="font-size:.8rem;color:var(--text-muted);">До уровня {{ profile_level|add:"1" }}: {{ profile_xp_needed|add:"-0" }} XP</div>
+        </div>
+
+        <!-- Другие задачи -->
+        {% if pending_tasks %}
+        <div class="card p-4 mb-3">
+            <h6 class="fw-bold mb-3">📌 Без даты</h6>
+            {% for task in pending_tasks %}
+            <div class="task-item">
+                <div class="task-checkbox" data-task-id="{{ task.id }}"></div>
+                <div class="priority-dot priority-{{ task.priority }}"></div>
+                <div class="flex-grow-1">
+                    <div class="task-title" style="font-size:.9rem;">{{ task.title }}</div>
+                </div>
+            </div>
+            {% endfor %}
+            <a href="{% url 'tasks:list' %}" class="btn btn-sm btn-outline-secondary w-100 mt-2">
+                Все задачи <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+        {% endif %}
+
+        <!-- Быстрые ссылки -->
+        <div class="card p-4">
+            <h6 class="fw-bold mb-3">🚀 Быстрый доступ</h6>
+            <div class="d-grid gap-2">
+                <a href="{% url 'stats:stats' %}" class="btn btn-outline-secondary btn-sm text-start">
+                    <i class="bi bi-bar-chart me-2"></i>Моя статистика
+                </a>
+                <a href="{% url 'gamification:achievements' %}" class="btn btn-outline-secondary btn-sm text-start">
+                    <i class="bi bi-trophy me-2"></i>Достижения
+                </a>
+                <a href="{% url 'shop:shop' %}" class="btn btn-outline-secondary btn-sm text-start">
+                    <i class="bi bi-shop me-2"></i>Магазин
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно добавления задачи -->
+<div class="modal fade" id="addTaskModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">📝 Новая задача</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'tasks:create' %}">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="/">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Название *</label>
+                        {{ form.title }}
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label">Тип</label>
+                            {{ form.task_type }}
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Дата</label>
+                            {{ form.due_date }}
+                        </div>
+                    </div>
+                    <div class="mb-3" data-repeat-interval-field>
+                        <label class="form-label">Период для повторяющейся задачи, дней</label>
+                        <input type="number"
+                               name="repeat_interval_days"
+                               class="form-control"
+                               min="1"
+                               step="1"
+                               value="2"
+                               placeholder="Например: 3">
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label">Приоритет</label>
+                            {{ form.priority }}
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Сложность</label>
+                            {{ form.difficulty }}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Категория</label>
+                        {{ form.category }}
+                    </div>
+                    <div class="mb-1">
+                        <label class="form-label">Описание</label>
+                        {{ form.description }}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-accent">Создать задачу</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Открываем модалку если была ошибка
+{% if show_modal %} new bootstrap.Modal(document.getElementById('addTaskModal')).show(); {% endif %}
+// Устанавливаем дату по умолчанию
+document.querySelector('#addTaskModal input[type=date]').value = '{{ today|date:"Y-m-d" }}';
+</script>
+{% endblock %}

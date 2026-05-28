@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}Регистрация — TaskMaster{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-md-5 col-lg-4">
+        <div class="text-center mb-4">
+            <h1 style="font-size:3rem;">🎮</h1>
+            <h2 class="fw-bold" style="background:linear-gradient(135deg,var(--accent),var(--accent-light));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">TaskMaster</h2>
+            <p style="color:var(--text-secondary);">Начни своё приключение</p>
+        </div>
+        <div class="card p-4">
+            <h4 class="mb-4 fw-bold text-center">Создать аккаунт</h4>
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label">Имя пользователя</label>
+                    {{ form.username }}
+                    {% if form.username.errors %}<div class="text-danger mt-1 small">{{ form.username.errors }}</div>{% endif %}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}<div class="text-danger mt-1 small">{{ form.email.errors }}</div>{% endif %}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Пароль</label>
+                    {{ form.password1 }}
+                    {% if form.password1.errors %}<div class="text-danger mt-1 small">{{ form.password1.errors }}</div>{% endif %}
+                </div>
+                <div class="mb-4">
+                    <label class="form-label">Подтверждение пароля</label>
+                    {{ form.password2 }}
+                    {% if form.password2.errors %}<div class="text-danger mt-1 small">{{ form.password2.errors }}</div>{% endif %}
+                </div>
+                <button type="submit" class="btn btn-accent w-100 py-2">🚀 Начать игру</button>
+            </form>
+            <hr style="border-color:var(--border);">
+            <p class="text-center mb-0" style="color:var(--text-secondary);">
+                Уже есть аккаунт? <a href="{% url 'accounts:login' %}" style="color:var(--accent-light);">Войти</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,43 @@
+# Python bytecode/cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+virtualenv/
+
+# Django local files
+*.sqlite3
+db.sqlite3
+media/
+staticfiles/
+
+# Environment/local settings
+.env
+.env.*
+!.env.example
+
+# Celery/local runtime
+celerybeat-schedule
+*.pid
+*.log
+
+# IDE/editor
+.idea/
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Archives/generated dumps
+*.zip
+*.tar
+*.tar.gz
+
+# Local/generated image uploads
+static/img/

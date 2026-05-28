@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}Вход — TaskMaster{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5 col-lg-4">
+        <div class="text-center mb-4">
+            <h1 style="font-size:3rem;">⚡</h1>
+            <h2 class="fw-bold" style="background:linear-gradient(135deg,var(--accent),var(--accent-light));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">TaskMaster</h2>
+            <p style="color:var(--text-secondary);">Прокачай свою продуктивность</p>
+        </div>
+        <div class="card p-4">
+            <h4 class="mb-4 fw-bold text-center">Войти в аккаунт</h4>
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label">Имя пользователя</label>
+                    {{ form.username }}
+                    {% if form.username.errors %}<div class="text-danger mt-1 small">{{ form.username.errors }}</div>{% endif %}
+                </div>
+                <div class="mb-4">
+                    <label class="form-label">Пароль</label>
+                    {{ form.password }}
+                    {% if form.password.errors %}<div class="text-danger mt-1 small">{{ form.password.errors }}</div>{% endif %}
+                </div>
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger mb-3">{{ form.non_field_errors }}</div>
+                {% endif %}
+                <button type="submit" class="btn btn-accent w-100 py-2">Войти</button>
+            </form>
+            <hr style="border-color:var(--border);">
+            <p class="text-center mb-0" style="color:var(--text-secondary);">
+                Нет аккаунта? <a href="{% url 'accounts:register' %}" style="color:var(--accent-light);">Зарегистрироваться</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
