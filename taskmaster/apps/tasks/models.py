@@ -30,6 +30,15 @@ class Category(models.Model):
 class Task(models.Model):
     REPEATING_TASK_TYPES = ('daily', 'recurring')
     OVERDUE_REWARD_PERCENT = 50
+    WEEKDAY_LABELS = {
+        0: 'Пн',
+        1: 'Вт',
+        2: 'Ср',
+        3: 'Чт',
+        4: 'Пт',
+        5: 'Сб',
+        6: 'Вс',
+    }
 
     TASK_TYPES = [
         ('daily', 'Ежедневная'),
@@ -82,6 +91,7 @@ class Task(models.Model):
         verbose_name='Группа повтора'
     )
     repeat_interval_days = models.PositiveIntegerField(default=1, verbose_name='Интервал повтора в днях')
+    repeat_weekdays = models.CharField(max_length=20, blank=True, default='', verbose_name='Дни недели повтора')
     repeat_stopped = models.BooleanField(default=False, verbose_name='Повтор остановлен')
 
     class Meta:
@@ -106,11 +116,21 @@ class Task(models.Model):
             interval = self.repeat_interval_days or 1
             if self.task_type == 'daily':
                 interval = 1
+                weekdays = '0,1,2,3,4,5,6'
             elif self.task_type == 'recurring':
-                interval = max(2, interval)
+                interval = 1
+                weekdays = self.normalize_weekdays(self.repeat_weekdays)
+                if not weekdays and self.due_date:
+                    weekdays = str(self.due_date.weekday())
+                elif not weekdays:
+                    weekdays = str(timezone.localdate().weekday())
+
             if self.repeat_interval_days != interval:
                 self.repeat_interval_days = interval
                 changed.append('repeat_interval_days')
+            if self.repeat_weekdays != weekdays:
+                self.repeat_weekdays = weekdays
+                changed.append('repeat_weekdays')
         else:
             if self.repeat_group is not None:
                 self.repeat_group = None
@@ -118,6 +138,9 @@ class Task(models.Model):
             if self.repeat_interval_days != 1:
                 self.repeat_interval_days = 1
                 changed.append('repeat_interval_days')
+            if self.repeat_weekdays:
+                self.repeat_weekdays = ''
+                changed.append('repeat_weekdays')
             if self.repeat_stopped:
                 self.repeat_stopped = False
                 changed.append('repeat_stopped')
@@ -152,6 +175,47 @@ class Task(models.Model):
     def get_coin_reward(self):
         return self.apply_reward_percent(self.get_base_coin_reward())
 
+    @classmethod
+    def normalize_weekdays(cls, weekdays):
+        if not weekdays:
+            return ''
+
+        if isinstance(weekdays, str):
+            raw_values = weekdays.split(',')
+        else:
+            raw_values = weekdays
+
+        values = []
+        for value in raw_values:
+            try:
+                day = int(value)
+            except (TypeError, ValueError):
+                continue
+            if 0 <= day <= 6 and day not in values:
+                values.append(day)
+
+        return ','.join(str(day) for day in sorted(values))
+
+    def repeat_weekday_numbers(self):
+        normalized = self.normalize_weekdays(self.repeat_weekdays)
+        if not normalized:
+            return []
+        return [int(day) for day in normalized.split(',')]
+
+    @classmethod
+    def next_date_for_weekdays(cls, start_date, weekdays, include_start=False):
+        normalized = cls.normalize_weekdays(weekdays)
+        if not normalized:
+            return start_date + timedelta(days=1)
+
+        selected = {int(day) for day in normalized.split(',')}
+        start_offset = 0 if include_start else 1
+        for offset in range(start_offset, 8):
+            candidate = start_date + timedelta(days=offset)
+            if candidate.weekday() in selected:
+                return candidate
+        return start_date + timedelta(days=1)
+
     @staticmethod
     def add_months(source_date, months=1):
         month = source_date.month - 1 + months
@@ -166,14 +230,17 @@ class Task(models.Model):
         if self.task_type == 'daily':
             return base_date + timedelta(days=1)
         if self.task_type == 'recurring':
-            return base_date + timedelta(days=max(2, self.repeat_interval_days or 2))
+            return self.next_date_for_weekdays(base_date, self.repeat_weekdays)
         return None
 
     def repeat_label(self):
         if self.task_type == 'daily':
             return 'каждый день'
         if self.task_type == 'recurring':
-            return f'каждые {max(2, self.repeat_interval_days or 2)} дн.'
+            days = self.repeat_weekday_numbers()
+            if days:
+                return ', '.join(self.WEEKDAY_LABELS[day] for day in days)
+            return 'по выбранным дням'
         return ''
 
     def create_repeat_occurrence(self, due_date):
@@ -210,6 +277,7 @@ class Task(models.Model):
             due_date=due_date,
             repeat_group=self.repeat_group,
             repeat_interval_days=self.repeat_interval_days,
+            repeat_weekdays=self.repeat_weekdays,
         )
 
     def create_next_repeat_occurrence(self):

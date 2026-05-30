@@ -59,6 +59,10 @@
         .task-tabs .nav-link{border-color:transparent!important;color:var(--text-secondary)!important;background:transparent!important;border-radius:10px 10px 0 0;}
         .task-tabs .nav-link:hover{border-color:var(--border)!important;color:var(--text-primary)!important;background:var(--bg-card-hover)!important;}
         .task-tabs .nav-link.active{border-color:var(--border) var(--border) var(--bg-card)!important;color:var(--accent-light)!important;background:var(--bg-card)!important;font-weight:600;}
+        .repeat-weekdays > div{display:flex;flex-wrap:wrap;gap:8px;}
+        .repeat-weekdays label{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border:1px solid var(--border);border-radius:10px;background:var(--bg-secondary);color:var(--text-secondary);font-size:.9rem;cursor:pointer;transition:all .2s;}
+        .repeat-weekdays label:has(input:checked){border-color:var(--accent);background:var(--accent-glow);color:var(--text-primary);}
+        .repeat-weekdays input{accent-color:var(--accent);}
         .achievement-card{text-align:center;padding:20px;border-radius:16px;transition:all .2s;}
         .achievement-card.locked{opacity:.35;filter:grayscale(1);}
         .achievement-icon{font-size:2.5rem;margin-bottom:8px;}
@@ -296,11 +300,11 @@ function updatePetWidget(streak) {
 function setupRepeatIntervalFields(root = document) {
     root.querySelectorAll('form').forEach(form => {
         const typeSelect = form.querySelector('[name="task_type"]');
-        const intervalInput = form.querySelector('[name="repeat_interval_days"]');
-        if (!typeSelect || !intervalInput || intervalInput.dataset.repeatReady) return;
+        const weekdayInputs = Array.from(form.querySelectorAll('[name="repeat_weekdays"]'));
+        if (!typeSelect || !weekdayInputs.length || form.dataset.repeatReady) return;
 
-        intervalInput.dataset.repeatReady = '1';
-        const intervalWrapper = intervalInput.closest('[data-repeat-interval-field]');
+        form.dataset.repeatReady = '1';
+        const weekdaysWrapper = form.querySelector('[data-repeat-weekdays-field]');
         const dateInput = form.querySelector('[name="due_date"]');
         let previousType = typeSelect.value;
         let dateBeforeGoal = '';
@@ -329,25 +333,34 @@ function setupRepeatIntervalFields(root = document) {
             });
         }
 
+        const selectedWeekdayFromDate = () => {
+            const source = dateInput?.value ? new Date(`${dateInput.value}T00:00:00`) : new Date();
+            return Number.isNaN(source.getTime()) ? new Date().getDay() : (source.getDay() + 6) % 7;
+        };
+
+        const checkOnlyWeekday = day => {
+            weekdayInputs.forEach(input => {
+                input.checked = input.value === String(day);
+            });
+        };
+
         const sync = () => {
             const isRecurring = typeSelect.value === 'recurring';
-            if (intervalWrapper) intervalWrapper.style.display = isRecurring ? '' : 'none';
-            intervalInput.required = isRecurring;
-            intervalInput.min = isRecurring ? '2' : '1';
+            if (weekdaysWrapper) weekdaysWrapper.style.display = isRecurring ? '' : 'none';
 
             if (isRecurring) {
-                const value = parseInt(intervalInput.value || '0', 10);
-                if (previousType !== 'recurring' || !value || value < 2) intervalInput.value = '2';
-            } else if (typeSelect.value === 'daily') {
-                intervalInput.value = '1';
+                const hasChecked = weekdayInputs.some(input => input.checked);
+                if (previousType !== 'recurring' || !hasChecked) {
+                    checkOnlyWeekday(selectedWeekdayFromDate());
+                }
             } else if (typeSelect.value === 'goal') {
-                intervalInput.value = '30';
+                weekdayInputs.forEach(input => input.checked = false);
                 if (dateInput && previousType !== 'goal') {
                     dateBeforeGoal = dateInput.value;
                     dateInput.value = shiftMonth(dateBeforeGoal, 1);
                 }
             } else {
-                intervalInput.value = '';
+                weekdayInputs.forEach(input => input.checked = false);
             }
 
             if (dateInput && previousType === 'goal' && typeSelect.value !== 'goal') {

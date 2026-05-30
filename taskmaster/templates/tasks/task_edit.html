@@ -13,15 +13,11 @@
                     <div class="col-6"><label class="form-label">Тип</label>{{ form.task_type }}</div>
                     <div class="col-6"><label class="form-label">Дата</label>{{ form.due_date }}</div>
                 </div>
-                <div class="mb-3" data-repeat-interval-field>
-                    <label class="form-label">Период для повторяющейся задачи, дней</label>
-                    <input type="number"
-                           name="repeat_interval_days"
-                           class="form-control"
-                           min="1"
-                           step="1"
-                           value="{{ task.repeat_interval_days|default:2 }}"
-                           placeholder="Например: 3">
+                <div class="mb-3" data-repeat-weekdays-field>
+                    <label class="form-label">Дни недели для повтора</label>
+                    <div class="repeat-weekdays">
+                        {{ form.repeat_weekdays }}
+                    </div>
                 </div>
                 <div class="row g-2 mb-3">
                     <div class="col-6"><label class="form-label">Приоритет</label>{{ form.priority }}</div>

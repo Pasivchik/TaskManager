@@ -11,7 +11,7 @@ class CategoryAdmin(admin.ModelAdmin):
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
     list_display = (
-        'title', 'user', 'task_type', 'repeat_interval_days',
+        'title', 'user', 'task_type', 'repeat_weekdays',
         'repeat_stopped', 'priority', 'difficulty', 'is_completed', 'due_date',
     )
     list_filter = ('task_type', 'repeat_stopped', 'priority', 'difficulty', 'is_completed')

@@ -5,11 +5,28 @@ from .models import Task, Category
 
 
 class TaskForm(forms.ModelForm):
+    WEEKDAY_CHOICES = [
+        ('0', 'Пн'),
+        ('1', 'Вт'),
+        ('2', 'Ср'),
+        ('3', 'Чт'),
+        ('4', 'Пт'),
+        ('5', 'Сб'),
+        ('6', 'Вс'),
+    ]
+
+    repeat_weekdays = forms.MultipleChoiceField(
+        choices=WEEKDAY_CHOICES,
+        required=False,
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'repeat-weekday-input'}),
+        label='Дни недели повтора',
+    )
+
     class Meta:
         model = Task
         fields = [
             'title', 'description', 'task_type', 'priority', 'difficulty',
-            'category', 'due_date', 'repeat_interval_days',
+            'category', 'due_date', 'repeat_weekdays',
         ]
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Название задачи'}),
@@ -19,12 +36,6 @@ class TaskForm(forms.ModelForm):
             'difficulty': forms.Select(attrs={'class': 'form-select'}),
             'category': forms.Select(attrs={'class': 'form-select'}),
             'due_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'repeat_interval_days': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'min': 2,
-                'step': 1,
-                'placeholder': 'Например: 3',
-            }),
         }
 
     def __init__(self, user, *args, **kwargs):
@@ -32,33 +43,35 @@ class TaskForm(forms.ModelForm):
         self.fields['category'].queryset = Category.objects.filter(user=user)
         self.fields['category'].empty_label = 'Без категории'
         self.fields['category'].required = False
-        self.fields['repeat_interval_days'].required = False
-        self.fields['repeat_interval_days'].initial = 2
-        self.fields['repeat_interval_days'].label = 'Период повтора, дней'
-        self.fields['repeat_interval_days'].help_text = (
-            'Используется только для типа "Повторяющаяся". '
-            'Для ежедневной и долгосрочной задачи поле не используется.'
-        )
+
+        if self.instance.pk:
+            self.fields['repeat_weekdays'].initial = [
+                str(day) for day in self.instance.repeat_weekday_numbers()
+            ]
 
     def clean(self):
         cleaned = super().clean()
         task_type = cleaned.get('task_type')
-        repeat_interval_days = cleaned.get('repeat_interval_days')
+        repeat_weekdays = cleaned.get('repeat_weekdays') or []
 
         if task_type in Task.REPEATING_TASK_TYPES and not cleaned.get('due_date'):
             cleaned['due_date'] = timezone.localdate()
 
         if task_type == 'recurring':
-            if not repeat_interval_days:
-                self.add_error('repeat_interval_days', 'Укажите частоту повтора в днях.')
-            elif repeat_interval_days < 2:
-                self.add_error('repeat_interval_days', 'Повторяющаяся задача должна повторяться раз в 2 дня или реже.')
+            if not repeat_weekdays:
+                self.add_error('repeat_weekdays', 'Выберите хотя бы один день недели.')
+            else:
+                cleaned['repeat_weekdays'] = Task.normalize_weekdays(repeat_weekdays)
+                base_date = cleaned.get('due_date') or timezone.localdate()
+                cleaned['due_date'] = Task.next_date_for_weekdays(
+                    base_date,
+                    cleaned['repeat_weekdays'],
+                    include_start=True,
+                )
         elif task_type == 'daily':
-            cleaned['repeat_interval_days'] = 1
-        elif task_type == 'goal':
-            cleaned['repeat_interval_days'] = 1
+            cleaned['repeat_weekdays'] = '0,1,2,3,4,5,6'
         else:
-            cleaned['repeat_interval_days'] = 1
+            cleaned['repeat_weekdays'] = ''
 
         return cleaned
 

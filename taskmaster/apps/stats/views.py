@@ -3,7 +3,7 @@ from datetime import timedelta
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
 from django.utils import timezone
-from django.db.models import Count
+from django.db.models import Count, F, Q
 from django.db.models.functions import TruncDate
 
 from apps.tasks.models import Task
@@ -34,9 +34,12 @@ class StatsView(LoginRequiredMixin, TemplateView):
         overdue_qs = (
             Task.objects.filter(
                 user=user,
-                is_completed=False,
                 due_date__gte=thirty_days_ago,
                 due_date__lt=today,
+            )
+            .filter(
+                Q(is_completed=False) |
+                Q(is_completed=True, completed_at__date__gt=F('due_date'))
             )
             .values('due_date')
             .annotate(count=Count('id'))
